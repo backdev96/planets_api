@@ -8,24 +8,38 @@ services:
       - ./src/web/:/usr/src/app/
     ports:
       - "5000:5000"
-    env_file:
-      - ./.env.dev
+    environment:
+      SKILLS_DB_USER: ${POSTGRES_USER:-skills}
+      SKILLS_DB_PASSWORD: ${POSTGRES_PASSWORD:-skills-password}
+      SKILLS_DB_NAME: ${POSTGRES_DB:-skills-projects}
+      SKILLS_DB_HOST: ${DB_HOST:-database}
+      SKILLS_DB_PORT: ${DB_PORT:-5432}
     depends_on:
-      - db
-  db:
-    image: postgres:13-alpine
+      - database
+    networks:
+      - database
+
+  database:
+    image: postgres:13.0-alpine
+    container_name: skills-database-dev
     expose:
       - "5432"
     ports:
       - "${PG_PORT:-5432}:5432"
     environment:
-      - POSTGRES_USER=hello_flask
-      - POSTGRES_PASSWORD=hello_flask
-      - POSTGRES_DB=hello_flask_dev
+      POSTGRES_USER: ${POSTGRES_USER:-skills}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-skills-password}
+      POSTGRES_DB: ${POSTGRES_DB:-skills-projects}
+      PGDATA: ${PGDATA:-/var/lib/postgresql/data}
     working_dir: /var/lib/postgresql/backups
     volumes:
       - ./docker-workdir/postgres/backups/:${PG_BACKUPS:-/var/lib/postgresql/backups/}
       - ./docker-workdir/postgres/data/:${PGDATA:-/var/lib/postgresql/data/}
+    command:
+      - "-c"
+      - "log_statement=all" # logs SQL queries
+    networks:
+      - database
 
-volumes:
-  postgres_data:
+networks:
+  database:
