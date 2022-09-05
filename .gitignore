@@ -1,3 +1,4 @@
 planets.db
 .gitignore
 /venv
+.env.dev
